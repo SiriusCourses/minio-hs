@@ -147,6 +147,10 @@ getObject' bucket object queryParams headers = do
                                , riObject = Just object
                                , riQueryParams = queryParams
                                , riHeaders = headers
+                                   -- This header is required for safety as otherwise http-client,
+                                   -- sends Accept-Encoding: gzip, and the server may actually gzip
+                                   -- body. In that case Content-Length header will be missing.
+                                <> [("Accept-Encoding", "identity")]
                                }
 
 -- | Creates a bucket via a PUT bucket call.
@@ -432,11 +436,14 @@ headObject bucket object reqHeaders = do
                                             , riBucket = Just bucket
                                             , riObject = Just object
                                             , riHeaders = reqHeaders
+                                                 -- This header is required for safety as otherwise http-client,
+                                                 -- sends Accept-Encoding: gzip, and the server may actually gzip
+                                                 -- body. In that case Content-Length header will be missing.
+                                              <> [("Accept-Encoding", "identity")]
                                             }
 
   maybe (throwIO MErrVInvalidObjectInfoResponse) return $
     parseGetObjectHeaders object $ NC.responseHeaders resp
-
 
 -- | Query the object store if a given bucket exists.
 headBucket :: Bucket -> Minio Bool
