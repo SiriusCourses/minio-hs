@@ -22,8 +22,6 @@ module Network.Minio.Data where
 
 import qualified Conduit                      as C
 import qualified Control.Concurrent.MVar      as M
-import           Control.Monad.IO.Unlift      (UnliftIO (..), askUnliftIO,
-                                               withUnliftIO)
 import           Control.Monad.Trans.Resource
 import qualified Data.Aeson                   as A
 import qualified Data.ByteArray               as BA
@@ -966,9 +964,11 @@ newtype Minio a = Minio {
     )
 
 instance MonadUnliftIO Minio where
-  askUnliftIO = Minio $ ReaderT $ \r ->
-                withUnliftIO $ \u ->
-                return (UnliftIO (unliftIO u . flip runReaderT r . unMinio))
+  withRunInIO f = Minio $ ReaderT $ \r ->
+    U.withRunInIO (\unliftResource ->
+      f (\g -> unliftResource (runReaderT (unMinio g) r)))
+      --          withUnliftIO $ \u ->
+      --          return (UnliftIO (unliftIO u . flip runReaderT r . unMinio))
 
 -- | MinioConn holds connection info and a connection pool to allow
 -- for efficient resource re-use.
