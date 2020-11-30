@@ -24,6 +24,7 @@ import           Test.Tasty.HUnit
 import           Text.RawString.QQ          (r)
 
 import           Lib.Prelude
+import qualified Data.ByteString.Lazy as BL
 
 import           Network.Minio.Data
 import           Network.Minio.TestHelpers
@@ -66,7 +67,7 @@ testMkPutNotificationRequest :: Assertion
 testMkPutNotificationRequest =
   forM_ cases $ \val -> do
     let ns = "http://s3.amazonaws.com/doc/2006-03-01/"
-        result = toS $ mkPutNotificationRequest ns val
+        result = BL.fromStrict $ mkPutNotificationRequest ns val
     ntf <- runExceptT $ runTestNS $ parseNotification result
     either (\_ -> assertFailure "XML Parse Error!")
       (@?= val) ntf

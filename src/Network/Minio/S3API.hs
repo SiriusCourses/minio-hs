@@ -93,12 +93,14 @@ module Network.Minio.S3API
 
 import qualified Data.ByteString                   as BS
 import qualified Data.Text                         as T
+import qualified Data.Text.Lazy                    as TL
+import qualified Data.Text.Lazy.Encoding           as TL
 import qualified Network.HTTP.Conduit              as NC
 import qualified Network.HTTP.Types                as HT
 import           Network.HTTP.Types.Status         (status404)
 import           UnliftIO                          (Handler (Handler))
 
-import           Lib.Prelude
+import           Lib.Prelude hiding (Handler(..))
 
 import           Network.Minio.API
 import           Network.Minio.APICommon
@@ -311,7 +313,7 @@ putObjectPart bucket object uploadId partNumber headers payload = do
 
 srcInfoToHeaders :: SourceInfo -> [HT.Header]
 srcInfoToHeaders srcInfo = ("x-amz-copy-source",
-                            toS $ T.concat ["/", srcBucket srcInfo,
+                            toUtf8 $ T.concat ["/", srcBucket srcInfo,
                                             "/", srcObject srcInfo]
                            ) : rangeHdr ++ zip names values
   where
@@ -501,7 +503,7 @@ getBucketPolicy bucket = do
                                , riBucket = Just bucket
                                , riQueryParams = [("policy", Nothing)]
                                }
-  return $ toS $ NC.responseBody resp
+  return $ TL.toStrict $ TL.decodeUtf8 $ NC.responseBody resp
 
 -- | Set a new policy on a bucket.
 -- As a special condition if the policy is empty

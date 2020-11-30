@@ -21,6 +21,7 @@ import           Control.Monad.IO.Unlift       (MonadUnliftIO)
 import qualified Control.Monad.Trans.Resource  as R
 import qualified Data.ByteString               as B
 import qualified Data.ByteString.Lazy          as LB
+import qualified Data.ByteString.Char8         as B8
 import           Data.CaseInsensitive          (mk, original)
 import qualified Data.Conduit.Binary           as CB
 import qualified Data.HashMap.Strict           as H
@@ -156,7 +157,7 @@ httpLbs req mgr = do
         throwIO sErr
 
       _ -> throwIO $ NC.HttpExceptionRequest req $
-        NC.StatusCodeException (void resp) (show resp)
+        NC.StatusCodeException (void resp) (B8.pack $ show resp)
 
   return resp
   where

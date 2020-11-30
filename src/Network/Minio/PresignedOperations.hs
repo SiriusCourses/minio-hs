@@ -39,6 +39,7 @@ module Network.Minio.PresignedOperations
 import           Data.Aeson                ((.=))
 import qualified Data.Aeson                as Json
 import           Data.ByteString.Builder   (byteString, toLazyByteString)
+import qualified Data.ByteString.Lazy      as BL
 import qualified Data.HashMap.Strict       as H
 import qualified Data.Text                 as T
 import qualified Data.Time                 as Time
@@ -93,7 +94,7 @@ makePresignedUrl expiry method bucket object region extraQuery extraHeaders = do
                  ((HT.parseQuery $ NC.queryString req) ++ qpToAdd)
       scheme = byteString $ bool "http://" "https://" $ connectIsSecure ci
 
-  return $ toS $ toLazyByteString $ scheme
+  return $ BL.toStrict $ toLazyByteString $ scheme
      <> byteString (getHostAddr ci)
      <> byteString (getS3Path bucket object)
      <> queryStr
@@ -246,7 +247,7 @@ newPostPolicy expirationTime conds
 
 -- | Convert Post Policy to a string (e.g. for printing).
 showPostPolicy :: PostPolicy -> ByteString
-showPostPolicy = toS . Json.encode
+showPostPolicy = BL.toStrict . Json.encode
 
 -- | Generate a presigned URL and POST policy to upload files via a
 -- browser. On success, this function returns a URL and POST
@@ -277,7 +278,7 @@ presignedPostPolicy p = do
     mkPair (PPCStartsWith k v) = Just (k, v)
     mkPair (PPCEquals k v)     = Just (k, v)
     mkPair _                   = Nothing
-    formFromPolicy = H.map toS $ H.fromList $ catMaybes $
+    formFromPolicy = H.map toUtf8 $ H.fromList $ catMaybes $
                      mkPair <$> conditions ppWithCreds
     formData = formFromPolicy `H.union` signData
 
@@ -286,7 +287,7 @@ presignedPostPolicy p = do
     scheme = byteString $ bool "http://" "https://" $ connectIsSecure ci
     region = connectRegion ci
 
-    url = toS $ toLazyByteString $ scheme <> byteString (getHostAddr ci) <>
-          byteString "/" <> byteString (toS bucket) <> byteString "/"
+    url = BL.toStrict $ toLazyByteString $ scheme <> byteString (getHostAddr ci) <>
+          byteString "/" <> byteString bucket <> byteString "/"
 
   return (url, formData)

@@ -26,6 +26,7 @@ import           Control.Monad.Trans.Resource
 import qualified Data.Aeson                   as A
 import qualified Data.ByteArray               as BA
 import qualified Data.ByteString              as B
+import qualified Data.ByteString.Lazy         as LB
 import           Data.CaseInsensitive         (mk)
 import qualified Data.HashMap.Strict          as H
 import qualified Data.Ini                     as Ini
@@ -202,8 +203,8 @@ disableTLSCertValidation :: ConnectInfo -> ConnectInfo
 disableTLSCertValidation c = c { connectDisableTLSCertValidation = True }
 
 getHostAddr :: ConnectInfo -> ByteString
-getHostAddr ci = if | port == 80 || port == 443 -> toS host
-                    | otherwise -> toS $
+getHostAddr ci = if | port == 80 || port == 443 -> toUtf8 host
+                    | otherwise -> toUtf8 $
                                    T.concat [ host, ":" , Lib.Prelude.show port]
   where
     port = connectPort ci
@@ -292,7 +293,7 @@ toPutObjectHeaders sseArg =
       SSEKMS keyIdMay ctxMay ->
           [(sseHeader, "aws:kms")] ++
           maybe [] (\k -> [(sseKmsIdHeader, k)]) keyIdMay ++
-          maybe [] (\k -> [(sseKmsContextHeader, toS $ A.encode k)]) ctxMay
+          maybe [] (\k -> [(sseKmsContextHeader, LB.toStrict $ A.encode k)]) ctxMay
 
       SSEC (SSECKey sb) ->
           [(ssecAlgo, "AES256"),
@@ -939,7 +940,7 @@ defaultS3ReqInfo = S3ReqInfo HT.methodGet Nothing Nothing
 
 getS3Path :: Maybe Bucket -> Maybe Object -> ByteString
 getS3Path b o =
-  let segments = map toS $ catMaybes $ b : bool [] [o] (isJust b)
+  let segments = map toUtf8 $ catMaybes $ b : bool [] [o] (isJust b)
   in
     B.concat ["/", B.intercalate "/" segments]
 
