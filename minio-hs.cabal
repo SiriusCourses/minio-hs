@@ -1,6 +1,6 @@
 cabal-version:       2.2
 name:                minio-hs
-version:             1.5.2
+version:             1.6
 synopsis:            A MinIO Haskell Library for Amazon S3 compatible cloud
                      storage.
 description:         The MinIO Haskell client library provides simple APIs to
@@ -57,7 +57,7 @@ common base-settings
                      , Network.Minio.JsonParser
   build-depends:       base >= 4.7 && < 5
                      , protolude >= 0.3 && < 0.4
-                     , aeson >= 1.2
+                     , aeson >= 2.0
                      , base64-bytestring >= 1.0
                      , binary >= 0.8.5.0
                      , bytestring >= 0.10
@@ -80,7 +80,7 @@ common base-settings
                      , raw-strings-qq >= 1
                      , resourcet >= 1.2
                      , retry
-                     , text >= 1.2
+                     , text >= 2.0
                      , time >= 1.8
                      , transformers >= 0.5
                      , unliftio >= 0.2 && < 0.3

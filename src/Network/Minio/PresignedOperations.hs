@@ -49,6 +49,7 @@ import Network.Minio.Data
 import Network.Minio.Data.Time
 import Network.Minio.Errors
 import Network.Minio.Sign.V4
+import qualified Data.Aeson.Key as K
 
 -- | Generate a presigned URL. This function allows for advanced usage
 -- - for simple cases prefer the `presigned*Url` functions.
@@ -193,12 +194,12 @@ data PostPolicyCondition
 
 instance Json.ToJSON PostPolicyCondition where
   toJSON (PPCStartsWith k v) = Json.toJSON ["starts-with", k, v]
-  toJSON (PPCEquals k v) = Json.object [k .= v]
+  toJSON (PPCEquals k v) = Json.object [K.fromText k .= v]
   toJSON (PPCRange k minVal maxVal) =
     Json.toJSON [Json.toJSON k, Json.toJSON minVal, Json.toJSON maxVal]
 
   toEncoding (PPCStartsWith k v) = Json.foldable ["starts-with", k, v]
-  toEncoding (PPCEquals k v) = Json.pairs (k .= v)
+  toEncoding (PPCEquals k v) = Json.pairs (K.fromText k .= v)
   toEncoding (PPCRange k minVal maxVal) =
     Json.foldable [Json.toJSON k, Json.toJSON minVal, Json.toJSON maxVal]
 
